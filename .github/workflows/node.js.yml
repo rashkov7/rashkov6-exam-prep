@@ -1,0 +1,54 @@
+
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: custom workflow
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Run install dependencies
+      run: npm install
+    - name: Printing the SoftUni name step
+      run: echo "rashkov"
+    - name: Run Unit tests
+      run: npm run test:unit
+    - run: npm run start &
+    - run: npx playwright install
+    - run: npm run test:ui
+
+#  deploy_render:
+#      runs-on: ubuntu-latest
+#      if: github.ref == 'refs/heads/main' #starting deploy if we trigered from main
+#      needs: build
+#      steps:
+#        - name: Deploy to production
+#          uses: johnbeynon/render-deploy-action@v0.0.8
+#          with:
+#            service-id: ${{ secrets.SERVICE_ID }}
+#            api-key: ${{ secrets.RENDER_API_KEY }}
+#            wait-for-success: true
+
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' #starting deploy if we trigered from main
+    needs: build
+    steps:
+      - name: Deploy to production
+        uses: actions/checkout@v4
+      - uses: JorgeLNJunior/render-deploy@v1.4.4
+        with:
+          service_id: ${{ secrets.SERVICE_ID }}
+          api_key: ${{ secrets.RENDER_API_KEY }}
+          clear_cache: true
+          wait_deploy: true
